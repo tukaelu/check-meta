@@ -29,7 +29,7 @@ func run(args []string) *checkers.Checker {
 	opts := &chkOpts{}
 	_, err := flags.ParseArgs(opts, args)
 	if err != nil {
-		return checkers.Unknown(err.Error())
+		os.Exit(1)
 	}
 
 	conf, err := loadConfig()
@@ -66,7 +66,6 @@ func getHostMetaData(apiKey string, hostID string, namespace string, key string)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%#v\n", meta)
 
 	value, ok := meta.HostMetaData.(map[string]interface{})[key]
 	if !ok {
@@ -78,13 +77,13 @@ func getHostMetaData(apiKey string, hostID string, namespace string, key string)
 func checkMetaValue(expected string, actual interface{}, metaKey string) *checkers.Checker {
 
 	status := checkers.OK
-	msg := fmt.Sprintf("matched")
+	msg := fmt.Sprintf("matched value")
 
 	switch actual.(type) {
 	case string:
 		if actual != expected {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("matched string: meta-key=%s, expected=%s, actual=%s", metaKey, expected, actual)
+			msg = fmt.Sprintf("unmatched string value: key=%s, expected=%s, actual=%s", metaKey, expected, actual)
 		}
 	case float64:
 		if converted, err := strconv.ParseFloat(expected, 64); err != nil {
@@ -92,7 +91,7 @@ func checkMetaValue(expected string, actual interface{}, metaKey string) *checke
 			msg = err.Error()
 		} else if converted != actual {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("matched float64 value: meta-key=%s, expected=%f, actual=%f", metaKey, converted, actual)
+			msg = fmt.Sprintf("unmatched float64 value: key=%s, expected=%f, actual=%f", metaKey, converted, actual)
 		}
 	case bool:
 		if converted, err := strconv.ParseBool(expected); err != nil {
@@ -100,7 +99,7 @@ func checkMetaValue(expected string, actual interface{}, metaKey string) *checke
 			msg = err.Error()
 		} else if converted != actual {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("matched boolean value: meta-key=%s, expected=%t, actual=%t", metaKey, converted, actual)
+			msg = fmt.Sprintf("unmatched boolean value: key=%s, expected=%t, actual=%t", metaKey, converted, actual)
 		}
 	default:
 		status = checkers.UNKNOWN
