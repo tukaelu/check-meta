@@ -13,9 +13,9 @@ Usage:
   check-meta [OPTIONS]
 
 Application Options:
-  -n, --namespace=
-  -k, --key=
-  -e, --expected=
+  -n, --namespace= Uses the metadata for the specified namespace
+  -k, --key=       The value matching the specified key is used for comparison
+  -e, --expected=  Compares with the specified expected value
 
 Help Options:
   -h, --help       Show this help message

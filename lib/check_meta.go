@@ -12,9 +12,9 @@ import (
 )
 
 type chkOpts struct {
-	Namespace string `short:"n" long:"namespace" required:"true" description:""`
-	MetaKey   string `short:"k" long:"key" required:"true" description:""`
-	Expected  string `short:"e" long:"expected" required:"true" description:""`
+	Namespace string `short:"n" long:"namespace" required:"true" description:"Uses the metadata for the specified namespace"`
+	MetaKey   string `short:"k" long:"key"       required:"true" description:"The value matching the specified key is used for comparison"`
+	Expected  string `short:"e" long:"expected"  required:"true" description:"Compares with the specified expected value"`
 	apiKey    string
 	hostID    string
 }
