@@ -11,7 +11,7 @@ import (
 	mkr "github.com/mackerelio/mackerel-client-go"
 )
 
-type chkOpts struct {
+var opts struct {
 	Namespace string `short:"n" long:"namespace" required:"true" description:"Uses the metadata for the specified namespace"`
 	MetaKey   string `short:"k" long:"key"       required:"true" description:"The value matching the specified key is used for comparison"`
 	Expected  string `short:"e" long:"expected"  required:"true" description:"Compares with the specified expected value"`
@@ -26,7 +26,6 @@ func Do() {
 }
 
 func run(args []string) *checkers.Checker {
-	opts := &chkOpts{}
 	_, err := flags.ParseArgs(opts, args)
 	if err != nil {
 		os.Exit(1)
@@ -44,12 +43,12 @@ func run(args []string) *checkers.Checker {
 	}
 	opts.hostID = hostID
 
-	value, err := getHostMetaData(opts.apiKey, opts.hostID, opts.Namespace, opts.MetaKey)
+	value, err := getHostMetaData()
 	if err != nil {
 		return checkers.Critical(err.Error())
 	}
 
-	return checkMetaValue(opts.Expected, value, opts.MetaKey)
+	return checkMetaValue(value)
 }
 
 func loadConfig() (*config.Config, error) {
@@ -60,46 +59,46 @@ func loadConfig() (*config.Config, error) {
 	return conf, nil
 }
 
-func getHostMetaData(apiKey string, hostID string, namespace string, key string) (interface{}, error) {
-	cli := mkr.NewClient(apiKey)
-	meta, err := cli.GetHostMetaData(hostID, namespace)
+func getHostMetaData() (interface{}, error) {
+	cli := mkr.NewClient(opts.apiKey)
+	meta, err := cli.GetHostMetaData(opts.hostID, opts.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	value, ok := meta.HostMetaData.(map[string]interface{})[key]
+	value, ok := meta.HostMetaData.(map[string]interface{})[opts.MetaKey]
 	if !ok {
-		return nil, fmt.Errorf("meta key does not exists: %s", key)
+		return nil, fmt.Errorf("meta key does not exists: %s", opts.MetaKey)
 	}
 	return value, nil
 }
 
-func checkMetaValue(expected string, actual interface{}, metaKey string) *checkers.Checker {
+func checkMetaValue(actual interface{}) *checkers.Checker {
 
 	status := checkers.OK
 	msg := fmt.Sprintf("matched value")
 
 	switch actual.(type) {
 	case string:
-		if actual != expected {
+		if actual != opts.Expected {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched string value: key=%s, expected=%s, actual=%s", metaKey, expected, actual)
+			msg = fmt.Sprintf("unmatched string value: key=%s, expected=%s, actual=%s", opts.MetaKey, opts.Expected, actual)
 		}
 	case float64:
-		if converted, err := strconv.ParseFloat(expected, 64); err != nil {
+		if converted, err := strconv.ParseFloat(opts.Expected, 64); err != nil {
 			status = checkers.UNKNOWN
 			msg = err.Error()
 		} else if converted != actual {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched float64 value: key=%s, expected=%f, actual=%f", metaKey, converted, actual)
+			msg = fmt.Sprintf("unmatched float64 value: key=%s, expected=%f, actual=%f", opts.MetaKey, converted, actual)
 		}
 	case bool:
-		if converted, err := strconv.ParseBool(expected); err != nil {
+		if converted, err := strconv.ParseBool(opts.Expected); err != nil {
 			status = checkers.UNKNOWN
 			msg = err.Error()
 		} else if converted != actual {
 			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched boolean value: key=%s, expected=%t, actual=%t", metaKey, converted, actual)
+			msg = fmt.Sprintf("unmatched boolean value: key=%s, expected=%t, actual=%t", opts.MetaKey, converted, actual)
 		}
 	default:
 		status = checkers.UNKNOWN

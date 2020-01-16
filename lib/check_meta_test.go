@@ -56,8 +56,11 @@ func TestCheckMetaValue(t *testing.T) {
 		},
 	}
 
+	opts.MetaKey = "dummy"
+
 	for i, tc := range testCase {
-		chk := checkMetaValue(tc.expected, tc.actual, "dummy")
+		opts.Expected = tc.expected
+		chk := checkMetaValue(tc.actual)
 		assert.Equal(t, chk.Status, tc.status, "#%d: Status should be %s", i, tc.status)
 	}
 }
