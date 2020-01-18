@@ -88,6 +88,9 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 	case string:
 		status, msg = checkStringValue(actual.(string))
 	case float64:
+		if !isValidNumberComparisonOption() {
+			return checkers.NewChecker(checkers.UNKNOWN, "gt/lt/ge/le options are only one can be specified")
+		}
 		status, msg = checkNumberValue(actual.(float64))
 	case bool:
 		if converted, err := strconv.ParseBool(opts.Expected); err != nil {
@@ -165,4 +168,21 @@ func checkNumberValue(actual float64) (checkers.Status, string) {
 	}
 
 	return status, fmt.Sprintf("%s: key=%s, actual(%f) %s expected(%f)", reason, opts.MetaKey, actual, op, expected)
+}
+
+func isValidNumberComparisonOption() bool {
+	optCnt := 0
+	if opts.GreaterThan {
+		optCnt++
+	}
+	if opts.LessThan {
+		optCnt++
+	}
+	if opts.GreaterOrEqual {
+		optCnt++
+	}
+	if opts.LessOrEqual {
+		optCnt++
+	}
+	return optCnt <= 1
 }

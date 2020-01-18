@@ -194,6 +194,15 @@ func TestCheckNumberTypeValue(t *testing.T) {
 			ge:       false,
 			le:       true,
 		},
+		{
+			expected: "1000",
+			actual:   float64(1001),
+			status:   checkers.UNKNOWN,
+			gt:       false,
+			lt:       false,
+			ge:       true,
+			le:       true,
+		},
 	}
 
 	opts.MetaKey = "dummy"
