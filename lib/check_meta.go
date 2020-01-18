@@ -13,12 +13,16 @@ import (
 )
 
 var opts struct {
-	Namespace string `short:"n" long:"namespace" required:"true"  description:"Uses the metadata for the specified namespace"`
-	MetaKey   string `short:"k" long:"key"       required:"true"  description:"The value matching the specified key is used for comparison"`
-	Expected  string `short:"e" long:"expected"  required:"true"  description:"Compares with the specified expected value"`
-	IsRegex   bool   `          long:"regex"     required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
-	apiKey    string
-	hostID    string
+	Namespace      string `short:"n" long:"namespace" required:"true"  description:"Uses the metadata for the specified namespace"`
+	MetaKey        string `short:"k" long:"key"       required:"true"  description:"The value matching the specified key is used for comparison"`
+	Expected       string `short:"e" long:"expected"  required:"true"  description:"Compares with the specified expected value"`
+	IsRegex        bool   `          long:"regex"     required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
+	GreaterThan    bool   `          long:"gt"        required:"false" description:"Compare as 'actual > expected' (Enable only for number type value)"`
+	LessThan       bool   `          long:"lt"        required:"false" description:"Compare as 'actual < expected' (Enable only for number type value)"`
+	GreaterOrEqual bool   `          long:"ge"        required:"false" description:"Compare as 'actual >= expected' (Enable only for number type value)"`
+	LessOrEqual    bool   `          long:"le"        required:"false" description:"Compare as 'actual <= expected' (Enable only for number type value)"`
+	apiKey         string
+	hostID         string
 }
 
 func Do() {
@@ -84,13 +88,7 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 	case string:
 		status, msg = checkStringValue(actual.(string))
 	case float64:
-		if converted, err := strconv.ParseFloat(opts.Expected, 64); err != nil {
-			status = checkers.UNKNOWN
-			msg = err.Error()
-		} else if converted != actual {
-			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched float64 value: key=%s, expected=%f, actual=%f", opts.MetaKey, converted, actual)
-		}
+		status, msg = checkNumberValue(actual.(float64))
 	case bool:
 		if converted, err := strconv.ParseBool(opts.Expected); err != nil {
 			status = checkers.UNKNOWN
@@ -130,4 +128,41 @@ func checkStringValue(actual string) (checkers.Status, string) {
 	reason = fmt.Sprintf("%sstring matched: key=%s, expected=%s, actual=%s", typeRegex, opts.MetaKey, opts.Expected, actual)
 
 	return checkers.OK, reason
+}
+
+func checkNumberValue(actual float64) (checkers.Status, string) {
+	var result bool
+	var op string
+
+	reason := "Matched"
+	status := checkers.OK
+
+	expected, err := strconv.ParseFloat(opts.Expected, 64)
+	if err != nil {
+		return checkers.UNKNOWN, err.Error()
+	}
+
+	if opts.GreaterThan {
+		result = actual > expected
+		op = ">"
+	} else if opts.LessThan {
+		result = actual < expected
+		op = "<"
+	} else if opts.GreaterOrEqual {
+		result = actual >= expected
+		op = ">="
+	} else if opts.LessOrEqual {
+		result = actual <= expected
+		op = "<="
+	} else {
+		result = actual == expected
+		op = "=="
+	}
+
+	if !result {
+		reason = "Does not matched"
+		status = checkers.CRITICAL
+	}
+
+	return status, fmt.Sprintf("%s: key=%s, actual(%f) %s expected(%f)", reason, opts.MetaKey, actual, op, expected)
 }
