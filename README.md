@@ -16,6 +16,7 @@ Application Options:
   -n, --namespace= Uses the metadata for the specified namespace
   -k, --key=       The value matching the specified key is used for comparison
   -e, --expected=  Compares with the specified expected value
+      --regex      Compare with regular expression if specified (Enable only for string type value)
 
 Help Options:
   -h, --help       Show this help message
