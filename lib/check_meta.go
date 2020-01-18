@@ -3,6 +3,7 @@ package checkmeta
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/jessevdk/go-flags"
@@ -12,9 +13,10 @@ import (
 )
 
 var opts struct {
-	Namespace string `short:"n" long:"namespace" required:"true" description:"Uses the metadata for the specified namespace"`
-	MetaKey   string `short:"k" long:"key"       required:"true" description:"The value matching the specified key is used for comparison"`
-	Expected  string `short:"e" long:"expected"  required:"true" description:"Compares with the specified expected value"`
+	Namespace string `short:"n" long:"namespace" required:"true"  description:"Uses the metadata for the specified namespace"`
+	MetaKey   string `short:"k" long:"key"       required:"true"  description:"The value matching the specified key is used for comparison"`
+	Expected  string `short:"e" long:"expected"  required:"true"  description:"Compares with the specified expected value"`
+	IsRegex   bool   `          long:"regex"     required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
 	apiKey    string
 	hostID    string
 }
@@ -80,10 +82,7 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 
 	switch actual.(type) {
 	case string:
-		if actual != opts.Expected {
-			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched string value: key=%s, expected=%s, actual=%s", opts.MetaKey, opts.Expected, actual)
-		}
+		status, msg = checkStringValue(opts.MetaKey, opts.Expected, actual.(string), opts.IsRegex)
 	case float64:
 		if converted, err := strconv.ParseFloat(opts.Expected, 64); err != nil {
 			status = checkers.UNKNOWN
@@ -106,4 +105,29 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 	}
 
 	return checkers.NewChecker(status, msg)
+}
+
+func checkStringValue(key string, expected string, actual string, isRegex bool) (checkers.Status, string) {
+	var result bool
+	var reason string
+	var typeRegex string = ""
+
+	if isRegex {
+		regExpected, err := regexp.Compile(opts.Expected)
+		if err != nil {
+			return checkers.UNKNOWN, err.Error()
+		}
+		result = regExpected.MatchString(actual)
+		typeRegex = "regex-"
+	} else {
+		result = opts.Expected == actual
+	}
+
+	if !result {
+		reason = "unmatched %sstring value: key=%s, expected=%s, actual=%s"
+		return checkers.CRITICAL, fmt.Sprintf(reason, typeRegex, key, expected, actual)
+	}
+	reason = fmt.Sprintf("%sstring matched: key=%s, expected=%s, actual=%s", typeRegex, key, expected, actual)
+
+	return checkers.OK, reason
 }
