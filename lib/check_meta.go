@@ -76,7 +76,7 @@ func run(args []string) *checkers.Checker {
 		return checkers.Unknown("Expected value not specified. Specify the --exptected or --compare-namespace/--compare-key options.")
 	}
 
-	return checkMetaValue(value)
+	return checkMetadata(value)
 }
 
 func loadConfig() (*config.Config, error) {
@@ -101,7 +101,7 @@ func getHostMetaData(hostID, namespace, metaKey string) (interface{}, error) {
 	return value, nil
 }
 
-func checkMetaValue(actual interface{}) *checkers.Checker {
+func checkMetadata(actual interface{}) *checkers.Checker {
 	msg := ""
 	status := checkers.OK
 

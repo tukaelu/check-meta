@@ -88,7 +88,7 @@ func TestCheckStringTypeValue(t *testing.T) {
 			opts.CompareMetaKey = opts.MetaKey
 			opts.compareMetaValue = tc.compareMetaValue
 		}
-		chk := checkMetaValue(tc.actual)
+		chk := checkMetadata(tc.actual)
 		assert.Equal(t, chk.Status, tc.status, "#%d: Status should be %s", i, tc.status)
 	}
 }
@@ -250,7 +250,7 @@ func TestCheckNumberTypeValue(t *testing.T) {
 			opts.CompareMetaKey = opts.MetaKey
 			opts.compareMetaValue = tc.compareMetaValue
 		}
-		chk := checkMetaValue(tc.actual)
+		chk := checkMetadata(tc.actual)
 		assert.Equal(t, chk.Status, tc.status, "#%d: Status should be %s", i, tc.status)
 	}
 }
@@ -307,7 +307,7 @@ func TestCheckBooleanTypeValue(t *testing.T) {
 			opts.CompareMetaKey = opts.MetaKey
 			opts.compareMetaValue = tc.compareMetaValue
 		}
-		chk := checkMetaValue(tc.actual)
+		chk := checkMetadata(tc.actual)
 		assert.Equal(t, chk.Status, tc.status, "#%d: Status should be %s", i, tc.status)
 	}
 }
