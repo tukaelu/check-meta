@@ -13,14 +13,16 @@ Usage:
   check-meta [OPTIONS]
 
 Application Options:
-  -n, --namespace= Uses the metadata for the specified namespace
-  -k, --key=       The value matching the specified key is used for comparison
-  -e, --expected=  Compares with the specified expected value
-      --regex      Compare with regular expression if specified (Enable only for string type value)
-      --gt         Compare as 'actual > expected' (Enable only for number type value)
-      --lt         Compare as 'actual < expected' (Enable only for number type value)
-      --ge         Compare as 'actual >= expected' (Enable only for number type value)
-      --le         Compare as 'actual <= expected' (Enable only for number type value)
+  -n, --namespace=         Uses the metadata for the specified namespace
+  -k, --key=               The value matching the specified key is used for comparison
+  -e, --expected=          Compares with the specified expected value
+      --regex              Compare with regular expression if specified (Enable only for string type value)
+      --gt                 Compare as 'actual > expected' (Enable only for number type value)
+      --lt                 Compare as 'actual < expected' (Enable only for number type value)
+      --ge                 Compare as 'actual >= expected' (Enable only for number type value)
+      --le                 Compare as 'actual <= expected' (Enable only for number type value)
+  -N, --compare-namespace= Uses the metadata for the specified namespace to compare
+  -K, --compare-key=       Uses the metadata value that matches the specified key as the expected value
 
 Help Options:
   -h, --help       Show this help message
