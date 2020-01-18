@@ -110,8 +110,10 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 
 func checkStringValue(actual string) (checkers.Status, string) {
 	var result bool
-	var reason string
 	var typeRegex string = ""
+
+	reason := "matched"
+	status := checkers.OK
 
 	if opts.IsRegex {
 		regExpected, err := regexp.Compile(opts.Expected)
@@ -125,19 +127,18 @@ func checkStringValue(actual string) (checkers.Status, string) {
 	}
 
 	if !result {
-		reason = "unmatched %sstring value: key=%s, expected=%s, actual=%s"
-		return checkers.CRITICAL, fmt.Sprintf(reason, typeRegex, opts.MetaKey, opts.Expected, actual)
+		reason = "does not matched"
+		status = checkers.CRITICAL
 	}
-	reason = fmt.Sprintf("%sstring matched: key=%s, expected=%s, actual=%s", typeRegex, opts.MetaKey, opts.Expected, actual)
 
-	return checkers.OK, reason
+	return status, fmt.Sprintf("%sstring %s: key=%s, actual=%s, expected=%s", typeRegex, reason, opts.MetaKey, actual, opts.Expected)
 }
 
 func checkNumberValue(actual float64) (checkers.Status, string) {
 	var result bool
 	var op string
 
-	reason := "Matched"
+	reason := "matched"
 	status := checkers.OK
 
 	expected, err := strconv.ParseFloat(opts.Expected, 64)
@@ -163,7 +164,7 @@ func checkNumberValue(actual float64) (checkers.Status, string) {
 	}
 
 	if !result {
-		reason = "Does not matched"
+		reason = "does not matched"
 		status = checkers.CRITICAL
 	}
 
