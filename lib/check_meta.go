@@ -28,7 +28,7 @@ func Do() {
 }
 
 func run(args []string) *checkers.Checker {
-	_, err := flags.ParseArgs(opts, args)
+	_, err := flags.ParseArgs(&opts, args)
 	if err != nil {
 		os.Exit(1)
 	}
