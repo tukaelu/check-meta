@@ -80,9 +80,8 @@ func getHostMetaData() (interface{}, error) {
 }
 
 func checkMetaValue(actual interface{}) *checkers.Checker {
-
+	msg := ""
 	status := checkers.OK
-	msg := fmt.Sprintf("matched value")
 
 	switch actual.(type) {
 	case string:
@@ -93,13 +92,7 @@ func checkMetaValue(actual interface{}) *checkers.Checker {
 		}
 		status, msg = checkNumberValue(actual.(float64))
 	case bool:
-		if converted, err := strconv.ParseBool(opts.Expected); err != nil {
-			status = checkers.UNKNOWN
-			msg = err.Error()
-		} else if converted != actual {
-			status = checkers.CRITICAL
-			msg = fmt.Sprintf("unmatched boolean value: key=%s, expected=%t, actual=%t", opts.MetaKey, converted, actual)
-		}
+		status, msg = checkBooleanTypeValue(actual.(bool))
 	default:
 		status = checkers.UNKNOWN
 		msg = fmt.Sprintf("unsupported type value: type=%T, value=%v", actual, actual)
@@ -168,7 +161,24 @@ func checkNumberValue(actual float64) (checkers.Status, string) {
 		status = checkers.CRITICAL
 	}
 
-	return status, fmt.Sprintf("%s: key=%s, actual(%f) %s expected(%f)", reason, opts.MetaKey, actual, op, expected)
+	return status, fmt.Sprintf("number value %s: key=%s, actual(%f) %s expected(%f)", reason, opts.MetaKey, actual, op, expected)
+}
+
+func checkBooleanTypeValue(actual bool) (checkers.Status, string) {
+	reason := "matched"
+	status := checkers.OK
+
+	expected, err := strconv.ParseBool(opts.Expected)
+	if err != nil {
+		return checkers.UNKNOWN, err.Error()
+	}
+
+	if actual != expected {
+		reason = "does not matched"
+		status = checkers.CRITICAL
+	}
+
+	return status, fmt.Sprintf("boolean value %s: key=%s, actual=%t expected=%t", reason, opts.MetaKey, actual, expected)
 }
 
 func isValidNumberComparisonOption() bool {
