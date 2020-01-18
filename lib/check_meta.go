@@ -13,16 +13,19 @@ import (
 )
 
 var opts struct {
-	Namespace      string `short:"n" long:"namespace" required:"true"  description:"Uses the metadata for the specified namespace"`
-	MetaKey        string `short:"k" long:"key"       required:"true"  description:"The value matching the specified key is used for comparison"`
-	Expected       string `short:"e" long:"expected"  required:"true"  description:"Compares with the specified expected value"`
-	IsRegex        bool   `          long:"regex"     required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
-	GreaterThan    bool   `          long:"gt"        required:"false" description:"Compare as 'actual > expected' (Enable only for number type value)"`
-	LessThan       bool   `          long:"lt"        required:"false" description:"Compare as 'actual < expected' (Enable only for number type value)"`
-	GreaterOrEqual bool   `          long:"ge"        required:"false" description:"Compare as 'actual >= expected' (Enable only for number type value)"`
-	LessOrEqual    bool   `          long:"le"        required:"false" description:"Compare as 'actual <= expected' (Enable only for number type value)"`
-	apiKey         string
-	hostID         string
+	Namespace        string `short:"n" long:"namespace"         required:"true"  description:"Uses the metadata for the specified namespace"`
+	MetaKey          string `short:"k" long:"key"               required:"true"  description:"The value matching the specified key is used for comparison"`
+	Expected         string `short:"e" long:"expected"          required:"false" description:"Compares with the specified expected value"`
+	IsRegex          bool   `          long:"regex"             required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
+	GreaterThan      bool   `          long:"gt"                required:"false" description:"Compare as 'actual > expected' (Enable only for number type value)"`
+	LessThan         bool   `          long:"lt"                required:"false" description:"Compare as 'actual < expected' (Enable only for number type value)"`
+	GreaterOrEqual   bool   `          long:"ge"                required:"false" description:"Compare as 'actual >= expected' (Enable only for number type value)"`
+	LessOrEqual      bool   `          long:"le"                required:"false" description:"Compare as 'actual <= expected' (Enable only for number type value)"`
+	CompareNamespace string `short:"N" long:"compare-namespace" required:"false" description:"Uses the metadata for the specified namespace to compare"`
+	CompareMetaKey   string `short:"K" long:"compare-key"       required:"false" description:"Uses the metadata value that matches the specified key as the expected value"`
+	apiKey           string
+	hostID           string
+	compareMetaValue interface{}
 }
 
 func Do() {
@@ -49,9 +52,28 @@ func run(args []string) *checkers.Checker {
 	}
 	opts.hostID = hostID
 
-	value, err := getHostMetaData()
+	value, err := getHostMetaData(opts.hostID, opts.Namespace, opts.MetaKey)
 	if err != nil {
 		return checkers.Critical(err.Error())
+	}
+
+	if shouldUseMetadataForCompare() {
+		if opts.CompareNamespace == "" {
+			opts.CompareNamespace = opts.Namespace
+		}
+		if opts.CompareMetaKey == "" {
+			opts.CompareMetaKey = opts.MetaKey
+		}
+
+		compareMetaValue, err := getHostMetaData(opts.hostID, opts.CompareNamespace, opts.CompareMetaKey)
+		if err != nil {
+			return checkers.Unknown(err.Error())
+		}
+		opts.compareMetaValue = compareMetaValue
+	}
+
+	if opts.Expected == "" && opts.compareMetaValue == nil {
+		return checkers.Unknown("Expected value not specified. Specify the --exptected or --compare-namespace/--compare-key options.")
 	}
 
 	return checkMetaValue(value)
@@ -65,16 +87,16 @@ func loadConfig() (*config.Config, error) {
 	return conf, nil
 }
 
-func getHostMetaData() (interface{}, error) {
+func getHostMetaData(hostID, namespace, metaKey string) (interface{}, error) {
 	cli := mkr.NewClient(opts.apiKey)
-	meta, err := cli.GetHostMetaData(opts.hostID, opts.Namespace)
+	meta, err := cli.GetHostMetaData(hostID, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	value, ok := meta.HostMetaData.(map[string]interface{})[opts.MetaKey]
+	value, ok := meta.HostMetaData.(map[string]interface{})[metaKey]
 	if !ok {
-		return nil, fmt.Errorf("meta key does not exists: %s", opts.MetaKey)
+		return nil, fmt.Errorf("meta key does not exists: %s", metaKey)
 	}
 	return value, nil
 }
@@ -107,16 +129,27 @@ func checkStringValue(actual string) (checkers.Status, string) {
 
 	reason := "matched"
 	status := checkers.OK
+	expected := ""
+
+	if shouldUseMetadataForCompare() {
+		compareMetaValue, err := opts.compareMetaValue.(string)
+		if !err {
+			return checkers.UNKNOWN, fmt.Sprintf("unmatched compare type: actual=string, expected=%T", opts.compareMetaValue)
+		}
+		expected = compareMetaValue
+	} else {
+		expected = opts.Expected
+	}
 
 	if opts.IsRegex {
-		regExpected, err := regexp.Compile(opts.Expected)
+		regExpected, err := regexp.Compile(expected)
 		if err != nil {
 			return checkers.UNKNOWN, err.Error()
 		}
 		result = regExpected.MatchString(actual)
 		typeRegex = "regex-"
 	} else {
-		result = opts.Expected == actual
+		result = expected == actual
 	}
 
 	if !result {
@@ -133,10 +166,20 @@ func checkNumberValue(actual float64) (checkers.Status, string) {
 
 	reason := "matched"
 	status := checkers.OK
+	expected := float64(0)
 
-	expected, err := strconv.ParseFloat(opts.Expected, 64)
-	if err != nil {
-		return checkers.UNKNOWN, err.Error()
+	if shouldUseMetadataForCompare() {
+		compareMetaValue, err := opts.compareMetaValue.(float64)
+		if !err {
+			return checkers.UNKNOWN, fmt.Sprintf("unmatched compare type: actual=float64, expected=%T", opts.compareMetaValue)
+		}
+		expected = compareMetaValue
+	} else {
+		var err error
+		expected, err = strconv.ParseFloat(opts.Expected, 64)
+		if err != nil {
+			return checkers.UNKNOWN, err.Error()
+		}
 	}
 
 	if opts.GreaterThan {
@@ -167,10 +210,20 @@ func checkNumberValue(actual float64) (checkers.Status, string) {
 func checkBooleanTypeValue(actual bool) (checkers.Status, string) {
 	reason := "matched"
 	status := checkers.OK
+	expected := true
 
-	expected, err := strconv.ParseBool(opts.Expected)
-	if err != nil {
-		return checkers.UNKNOWN, err.Error()
+	if shouldUseMetadataForCompare() {
+		compareMetaValue, err := opts.compareMetaValue.(bool)
+		if !err {
+			return checkers.UNKNOWN, fmt.Sprintf("unmatched compare type: actual=bool, expected=%T", opts.compareMetaValue)
+		}
+		expected = compareMetaValue
+	} else {
+		var err error
+		expected, err = strconv.ParseBool(opts.Expected)
+		if err != nil {
+			return checkers.UNKNOWN, err.Error()
+		}
 	}
 
 	if actual != expected {
@@ -196,4 +249,8 @@ func isValidNumberComparisonOption() bool {
 		optCnt++
 	}
 	return optCnt <= 1
+}
+
+func shouldUseMetadataForCompare() bool {
+	return !(opts.CompareNamespace == "" && opts.CompareMetaKey == "")
 }
