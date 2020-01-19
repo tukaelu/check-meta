@@ -13,16 +13,16 @@ import (
 )
 
 var opts struct {
-	Namespace        string `short:"n" long:"namespace"         required:"true"  description:"Uses the metadata for the specified namespace"`
-	MetaKey          string `short:"k" long:"key"               required:"true"  description:"The value matching the specified key is used for comparison"`
-	Expected         string `short:"e" long:"expected"          required:"false" description:"Compares with the specified expected value"`
-	IsRegex          bool   `          long:"regex"             required:"false" description:"Compare with regular expression if specified (Enable only for string type value)"`
-	GreaterThan      bool   `          long:"gt"                required:"false" description:"Compare as 'actual > expected' (Enable only for number type value)"`
-	LessThan         bool   `          long:"lt"                required:"false" description:"Compare as 'actual < expected' (Enable only for number type value)"`
-	GreaterOrEqual   bool   `          long:"ge"                required:"false" description:"Compare as 'actual >= expected' (Enable only for number type value)"`
-	LessOrEqual      bool   `          long:"le"                required:"false" description:"Compare as 'actual <= expected' (Enable only for number type value)"`
-	CompareNamespace string `short:"N" long:"compare-namespace" required:"false" description:"Uses the metadata for the specified namespace to compare"`
-	CompareMetaKey   string `short:"K" long:"compare-key"       required:"false" description:"Uses the metadata value that matches the specified key as the expected value"`
+	Namespace        string `short:"n" long:"namespace"         required:"true"  value-name:"NAMESPACE"      description:"Uses the metadata for the specified namespace"`
+	MetaKey          string `short:"k" long:"key"               required:"true"  value-name:"KEY"            description:"The value matching the specified key is used for comparison"`
+	Expected         string `short:"e" long:"expected"          required:"false" value-name:"EXPECTED-VALUE" description:"Compares with the specified expected value"`
+	IsRegex          bool   `          long:"regex"             required:"false"                             description:"Compare with regular expression if specified (Enable only for string type value)"`
+	GreaterThan      bool   `          long:"gt"                required:"false"                             description:"Compare as 'actual > expected' (Enable only for number type value)"`
+	LessThan         bool   `          long:"lt"                required:"false"                             description:"Compare as 'actual < expected' (Enable only for number type value)"`
+	GreaterOrEqual   bool   `          long:"ge"                required:"false"                             description:"Compare as 'actual >= expected' (Enable only for number type value)"`
+	LessOrEqual      bool   `          long:"le"                required:"false"                             description:"Compare as 'actual <= expected' (Enable only for number type value)"`
+	CompareNamespace string `short:"N" long:"compare-namespace" required:"false" value-name:"NAMESPACE"      description:"Uses the metadata for the specified namespace to compare"`
+	CompareMetaKey   string `short:"K" long:"compare-key"       required:"false" value-name:"KEY"            description:"Uses the metadata value that matches the specified key as the expected value"`
 	apiKey           string
 	hostID           string
 	compareMetaValue interface{}
