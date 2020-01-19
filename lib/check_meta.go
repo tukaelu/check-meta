@@ -157,7 +157,7 @@ func checkStringValue(actual string) (checkers.Status, string) {
 		status = checkers.CRITICAL
 	}
 
-	return status, fmt.Sprintf("%sstring %s: key=%s, actual=%s, expected=%s", typeRegex, reason, opts.MetaKey, actual, opts.Expected)
+	return status, fmt.Sprintf("%sstring %s: key=%s, actual=%s, expected=%s", typeRegex, reason, opts.MetaKey, actual, expected)
 }
 
 func checkNumberValue(actual float64) (checkers.Status, string) {
