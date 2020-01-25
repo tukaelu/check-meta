@@ -2,6 +2,7 @@ package checkmeta
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -35,6 +36,9 @@ func Do() {
 }
 
 func run(args []string) *checkers.Checker {
+	origArgs := make([]string, len(args))
+	copy(origArgs, args)
+
 	_, err := flags.ParseArgs(&opts, args)
 	if err != nil {
 		os.Exit(1)
@@ -65,9 +69,22 @@ func run(args []string) *checkers.Checker {
 			opts.CompareMetaKey = opts.MetaKey
 		}
 
+		cacheFile := getCacheFile(origArgs)
+
 		compareMetaValue, err := getHostMetaData(opts.hostID, opts.CompareNamespace, opts.CompareMetaKey)
 		if err != nil {
-			return checkers.Unknown(err.Error())
+			cache, err := loadCache(cacheFile)
+			if err != nil {
+				return checkers.Unknown(err.Error())
+			}
+			if cache.Expected == nil {
+				return checkers.Unknown("there is no data in the cache.")
+			}
+			compareMetaValue = cache.Expected
+		} else {
+			if err := saveCache(cacheFile, &cache{Options: origArgs, Expected: compareMetaValue}); err != nil {
+				log.Printf("failed to saveCache: %s", err)
+			}
 		}
 		opts.compareMetaValue = compareMetaValue
 	}
