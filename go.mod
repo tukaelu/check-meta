@@ -7,10 +7,12 @@ require (
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mackerelio/checkers v0.0.0-20190411030116-60cbd7b55456
+	github.com/mackerelio/golib v0.0.0-20191002020229-a65782d392ca
 	github.com/mackerelio/mackerel-agent v0.65.0
 	github.com/mackerelio/mackerel-client-go v0.8.0
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.11 // indirect
+	github.com/natefinch/atomic v0.0.0-20150920032501-a62ce929ffcc
 	github.com/pierrec/lz4 v2.4.0+incompatible // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tcnksm/ghr v0.13.0 // indirect
