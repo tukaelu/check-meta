@@ -82,7 +82,7 @@ func run(args []string) *checkers.Checker {
 			}
 			compareMetaValue = cache.Expected
 		} else {
-			if err := saveCache(cacheFile, &cache{Options: origArgs, Expected: compareMetaValue}); err != nil {
+			if _, err := saveCache(cacheFile, &cache{Options: origArgs, Expected: compareMetaValue}); err != nil {
 				log.Printf("failed to saveCache: %s", err)
 			}
 		}

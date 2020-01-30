@@ -1,1 +1,1 @@
-{"options":["--namespace","foobar","--key","version","--compare-key","require_version","--regex"],"expected":"0.63.[0-9]{1,2}"}
+{"options":["--namespace","foobar","--key","version","--compare-key","require_version","--regex"],"expected":"0.63.[0-9]{1,2}","updated_at":1580384252}

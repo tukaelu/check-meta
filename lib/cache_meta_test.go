@@ -107,7 +107,10 @@ func TestOverwriteSaveCache(t *testing.T) {
 
 func saveAndLoad(t *testing.T, file string, c *cache) {
 	t.Helper()
-	if err := saveCache(file, c); err != nil {
+
+	var c0 *cache
+	var err error
+	if c0, err = saveCache(file, c); err != nil {
 		t.Errorf("saveCache(%v) = %v; want nil", file, *c)
 		return
 	}
@@ -116,7 +119,7 @@ func saveAndLoad(t *testing.T, file string, c *cache) {
 		t.Errorf("loadCache: %v", err)
 		return
 	}
-	if !reflect.DeepEqual(c.Expected, c1.Expected) {
+	if !reflect.DeepEqual(c0.Expected, c1.Expected) {
 		t.Errorf("saveCache(%v) -> loadCache() = %v", c, c1)
 	}
 }

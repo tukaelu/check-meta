@@ -9,14 +9,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mackerelio/golib/pluginutil"
 	"github.com/natefinch/atomic"
 )
 
 type cache struct {
-	Options  interface{} `json:"options"`
-	Expected interface{} `json:"expected"`
+	Options   interface{} `json:"options"`
+	Expected  interface{} `json:"expected"`
+	UpdatedAt int64       `json:"updated_at"`
 }
 
 func getCacheFile(args []string) string {
@@ -29,12 +31,13 @@ func getCacheFile(args []string) string {
 	)
 }
 
-func saveCache(file string, cache *cache) error {
+func saveCache(file string, cache *cache) (*cache, error) {
+	cache.UpdatedAt = time.Now().Unix()
 	b, _ := json.Marshal(cache)
 	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
-		return err
+		return nil, err
 	}
-	return atomic.WriteFile(file, bytes.NewReader(b))
+	return cache, atomic.WriteFile(file, bytes.NewReader(b))
 }
 
 func loadCache(file string) (*cache, error) {
