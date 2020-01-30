@@ -16,7 +16,7 @@ import (
 )
 
 type cache struct {
-	Options   interface{} `json:"options"`
+	Options   []string    `json:"options"`
 	Expected  interface{} `json:"expected"`
 	UpdatedAt int64       `json:"updated_at"`
 }

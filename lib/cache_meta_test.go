@@ -119,7 +119,7 @@ func saveAndLoad(t *testing.T, file string, c *cache) {
 		t.Errorf("loadCache: %v", err)
 		return
 	}
-	if !reflect.DeepEqual(c0.Expected, c1.Expected) {
+	if !reflect.DeepEqual(c0, c1) {
 		t.Errorf("saveCache(%v) -> loadCache() = %v", c, c1)
 	}
 }
